@@ -225,22 +225,26 @@ def main():
         print ("ERROR: Team not in the list. Please, check weekly_config.py")
         raise SystemExit
 
-    team = config.TEAMS[ns.team]
+    team    = config.TEAMS[ns.team]
+    team_bz = team.get('bugzilla')
+    if not team_bz:
+        print ("ERROR: A 'bugzilla' block is required inside the %s's block. Please, check weekly_config.py" %(ns.team))
+        raise SystemExit
 
     # Logging
     if ns.debug:
         logging.basicConfig (level=logging.DEBUG)
 
     # Reports
-    for project in team['projects']:
+    for project in team_bz['projects']:
         print report_bugs_summary (project)
         print
         print report_bugs_untriaged (project, ns.untriaged_all)
         print
 
-    print report_bugs_fixed_in_recently (ns.days, team['people'])
+    print report_bugs_fixed_in_recently (ns.days, team_bz['people'])
     print
-    print report_bugs_by_engineer (team['people'])
+    print report_bugs_by_engineer (team_bz['people'])
     print
 
 
