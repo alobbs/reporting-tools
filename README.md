@@ -4,6 +4,7 @@ Tools that make my life slightly easier
 
 Configuration
 -------------
+Create ``weekly_config.py`` from ``weekly_config.py.sample``.
 Edit the ``weekly_config.py`` and adapt it to your teams.
 
 Bug Summaries
