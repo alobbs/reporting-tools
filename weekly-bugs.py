@@ -12,6 +12,7 @@ import os
 import sys
 import time
 import datetime
+import collections
 import prettytable
 import logging
 import argparse
@@ -148,6 +149,9 @@ def filter_bug_by_date(bug, days_num):
     return (time.mktime(d.timetuple()) >=
             (time.time() - ((days_num + 3) * 24 * 60 * 60)))
 
+def filter_bug_by_project(bug, projects):
+    return bug[2][1:-1] in projects
+
 
 def URL_get_macro_devels(emails_ids, bug_statuses):
     return BUGLIST_URL + '&'.join(
@@ -218,23 +222,45 @@ def report_bugs_untriaged(project, include_all):
     return txt
 
 
-def report_bugs_fixed_in_recently(days_num, email_ids):
+def report_bugs_fixed_in_recently(days_num, email_ids, projects):
     url = URL_get_macro_devels(email_ids, STATUSES_DONE)
     logging.debug(url)
 
-    bugs = parse_CVS_bug_list(GET(url))
-    bugs2 = [b for b in bugs if filter_bug_by_date(b, days_num)]
+    # Filter bugs
+    bugs_all = parse_CVS_bug_list(GET(url))
+    bugs_date = [b for b in bugs_all if filter_bug_by_date(b, days_num)]
+    bugs_date_prj = [b for b in bugs_date if filter_bug_by_project(b, projects)]
+    bugs_date_not_prj = [b for b in bugs_date if not filter_bug_by_project(b, projects)]
 
+    # Render table
     table = prettytable.PrettyTable(['ID', 'Src', 'Sta', 'Summary', 'Owner'],
                                     sortby='ID', reversesort=True)
-    for bug in bugs2:
+    for bug in bugs_date_prj:
         table.add_row([bug[0], format_source(bug[1]),
                        format_status_to_char(bug[4]),
                        format_summary(bug[6], 36),
                        format_id_form_email(bug[3])])
 
-    txt = u"➤ Closed in the last %d days (%d)\n" % (days_num, len(bugs2))
+    # Header
+    if  len(projects) > 1:
+        txt = u"➤ Closed in the %d team's components (%d)\n" % (len(projects), len(bugs_date_prj))
+    else:
+        txt = u"➤ Closed in %s (%d)\n" % (projects[0], len(bugs_date_prj))
+
     txt += table.get_string()
+
+    # Footer
+    if bugs_date_not_prj:
+        projects_sum = collections.Counter ([b[2][1:-1] for b in bugs_date_not_prj])
+
+        if len(projects_sum) == 1:
+            txt += "\n%s more bugs closed in %s\n" % (len(bugs_date_not_prj), projects_sum.keys()[0])
+        else:
+            txt += "\n%s more bugs closed by the team:\n" % (len(bugs_date_not_prj))
+            max_len = max ([len(p) for p in projects_sum])
+            for p in projects_sum:
+                txt += u" • %s:%s %s bug%s\n" % (p, ' ' *(max_len - len(p)), projects_sum[p], ('','s')[projects_sum[p] >= 2])
+
     return txt
 
 
@@ -298,7 +324,7 @@ def main():
         print report_bugs_untriaged(project, ns.untriaged_all)
         print
 
-    print report_bugs_fixed_in_recently(ns.days, team_bz['people'])
+    print report_bugs_fixed_in_recently(ns.days, team_bz['people'], team_bz['projects'])
     print
     print report_bugs_by_engineer(team_bz['people'])
     print
