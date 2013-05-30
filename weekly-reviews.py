@@ -149,7 +149,10 @@ def main():
             data = filter_data_from_time(data, from_time)
             if data:
                 print "➤ %s: %s (%d)" % (queries[q_type], project, len(data))
-                print render_owners(data, from_time)
+                if q_type == 'owner':
+                    print render_owners(data, from_time)
+                else:
+                    print render_reviewers(data, from_time)
                 print
 
 
