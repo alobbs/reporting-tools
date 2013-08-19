@@ -89,9 +89,13 @@ def run_query(search_field, project, people, user, server, port):
     data = []
 
     for nick in people:
+        if not '/' in project:
+            project_s = "project:openstack/%(project)s" % (locals())
+        else:
+            project_s = "project:%(project)s" % (locals())
+
         # Query
-        query = ("%(search_field)s:%(nick)s@redhat.com AND "
-                 "project:openstack/%(project)s" % (locals()))
+        query = ("%(search_field)s:%(nick)s@redhat.com AND %(project_s)s" % (locals()))
         #  AND age:%(AGE)s
 
         # Excute
