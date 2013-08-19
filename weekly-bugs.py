@@ -254,9 +254,9 @@ def report_bugs_fixed_in_recently(days_num, email_ids, projects):
         projects_sum = collections.Counter ([b[2][1:-1] for b in bugs_date_not_prj])
 
         if len(projects_sum) == 1:
-            txt += "\n%s more bugs closed in %s\n" % (len(bugs_date_not_prj), projects_sum.keys()[0])
+            txt += "\n%s more bugs were closed in %s\n" % (len(bugs_date_not_prj), projects_sum.keys()[0])
         else:
-            txt += "\n%s more bugs closed by the team:\n" % (len(bugs_date_not_prj))
+            txt += "\n%s more bugs were closed by the team:\n" % (len(bugs_date_not_prj))
             max_len = max ([len(p) for p in projects_sum])
             for p in projects_sum:
                 txt += u" • %s:%s %s bug%s\n" % (p, ' ' *(max_len - len(p)), projects_sum[p], ('','s')[projects_sum[p] >= 2])
